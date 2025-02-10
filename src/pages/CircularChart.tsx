@@ -29,6 +29,7 @@ const CircularCharts = () => {
         .order('timestamp', { ascending: false })
         .limit(1);
 
+
       const { data: tempData, error: tempError } = await supabase
         .from('temperature_data')
         .select('value')
