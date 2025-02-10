@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #2563eb;
+  --secondary: #0891b2;
+  --danger: #dc2626;
+}
+
+body {
+  @apply antialiased;
+}
+
+.dark {
+  color-scheme: dark;
+}
