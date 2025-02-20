@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { supabase } from '../lib/supabase';
@@ -14,91 +14,91 @@ interface SensorData {
 const CircularCharts = () => {
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
 
-  // Function to fetch latest sensor data
-  const fetchData = async () => {
+  // Memoized fetch function with proper error handling
+  const fetchData = useCallback(async () => {
+    console.log('Fetching latest sensor data...');
     try {
-      const { data: ecgData, error: ecgError } = await supabase
-        .from('ecg_data')
-        .select('value')
-        .order('timestamp', { ascending: false })
-        .limit(1);
-
-      const { data: spo2Data, error: spo2Error } = await supabase
-        .from('spo2_data')
-        .select('value')
-        .order('timestamp', { ascending: false })
-        .limit(1);
-
-
-      const { data: tempData, error: tempError } = await supabase
-        .from('temperature_data')
-        .select('value')
-        .order('timestamp', { ascending: false })
-        .limit(1);
+      const [
+        { data: ecgData, error: ecgError },
+        { data: spo2Data, error: spo2Error },
+        { data: tempData, error: tempError }
+      ] = await Promise.all([
+        supabase.from('ecg_data').select('value').order('timestamp', { ascending: false }).limit(1),
+        supabase.from('spo2_data').select('value').order('timestamp', { ascending: false }).limit(1),
+        supabase.from('temperature_data').select('value').order('timestamp', { ascending: false }).limit(1)
+      ]);
 
       if (ecgError || spo2Error || tempError) {
-        console.error('Supabase error:', ecgError, spo2Error, tempError);
-        return;
+        throw new Error(`Supabase errors: ${ecgError?.message} ${spo2Error?.message} ${tempError?.message}`);
       }
 
-      const ecgValue = ecgData?.[0]?.value || 0;
-      const spo2Value = spo2Data?.[0]?.value || 0;
-      const temperatureValue = tempData?.[0]?.value || 0;
+      const processData = (): SensorData => {
+        const ecgValue = ecgData?.[0]?.value || 0;
+        const spo2Value = spo2Data?.[0]?.value || 0;
+        const temperatureValue = tempData?.[0]?.value || 0;
 
-      let recommendation = '';
-      let alert = '';
+        let recommendation = '';
+        let alert = '';
 
-      // Setting recommendations and alerts based on values
-      if (ecgValue < 60) {
-        alert += 'ECG indicates bradycardia. ';
-        recommendation += 'Consult a healthcare provider. ';
-      } else if (ecgValue > 100) {
-        alert += 'ECG indicates tachycardia. ';
-        recommendation += 'Monitor your heart rate. ';
-      }
+        // ECG logic
+        if (ecgValue < 60) {
+          alert += 'ECG indicates bradycardia. ';
+          recommendation += 'Consult a healthcare provider. ';
+        } else if (ecgValue > 100) {
+          alert += 'ECG indicates tachycardia. ';
+          recommendation += 'Monitor your heart rate. ';
+        }
 
-      if (spo2Value < 90) {
-        alert += 'Low SpO2 detected. ';
-        recommendation += 'Seek urgent medical care. ';
-      } else if (spo2Value < 95) {
-        recommendation += 'Consider consulting a healthcare provider. ';
-      }
+        // SpO2 logic
+        if (spo2Value < 90) {
+          alert += 'Low SpO2 detected. ';
+          recommendation += 'Seek urgent medical care. ';
+        } else if (spo2Value < 95) {
+          recommendation += 'Consider consulting a healthcare provider. ';
+        }
 
-      if (temperatureValue > 100.4) {
-        alert += 'High fever detected. ';
-        recommendation += 'Monitor temperature and consult a doctor. ';
-      } else if (temperatureValue < 95) {
-        alert += 'Low body temperature detected. ';
-        recommendation += 'Seek medical advice. ';
-      }
+        // Temperature logic
+        if (temperatureValue > 100.4) {
+          alert += 'High fever detected. ';
+          recommendation += 'Monitor temperature and consult a doctor. ';
+        } else if (temperatureValue < 95) {
+          alert += 'Low body temperature detected. ';
+          recommendation += 'Seek medical advice. ';
+        }
 
-      setSensorData({
-        ecg: ecgValue,
-        spo2: spo2Value,
-        temperature: temperatureValue,
-        recommendation: recommendation || 'Follow general health guidelines.',
-        alert: alert || 'No critical alerts.',
-      });
+        return {
+          ecg: ecgValue,
+          spo2: spo2Value,
+          temperature: temperatureValue,
+          recommendation: recommendation || 'Follow general health guidelines.',
+          alert: alert || 'No critical alerts.',
+        };
+      };
+
+      setSensorData(processData());
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Data fetch error:', error);
     }
-  };
+  }, []);
 
-  // Fetch initial data and set up real-time subscription
+  // Real-time updates setup
   useEffect(() => {
-    fetchData(); // Initial fetch
+    // Initial fetch
+    fetchData();
 
-    const channel = supabase
-      .channel('realtime:sensor_data')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ecg_data' }, fetchData)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'spo2_data' }, fetchData)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'temperature_data' }, fetchData)
+    // Setup real-time listeners
+    const tables = ['ecg_data', 'spo2_data', 'temperature_data'];
+    const channel = supabase.channel('realtime-sensors')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public' }, (payload) => {
+        console.log('Realtime update:', payload.table);
+        fetchData(); // Refresh data on any insert
+      })
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchData]); // Add fetchData to dependency array
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

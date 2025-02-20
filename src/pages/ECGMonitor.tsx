@@ -20,7 +20,7 @@ export default function ECGMonitor() {
       .from("ecg_data")
       .select("*")
       .order("timestamp", { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (error) {
       console.error("Error fetching ECG data:", error);
@@ -50,7 +50,7 @@ export default function ECGMonitor() {
         (payload) => {
           console.log("New ECG Data:", payload.new);
           setData((currentData) => {
-            const newData = [...currentData.slice(-49), payload.new];
+            const newData = [...currentData.slice(-99), payload.new];
             setLatestValue(payload.new.value);
             return newData;
           });
