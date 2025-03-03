@@ -15,7 +15,7 @@ const Logout: React.FC = () => {
       if (error) throw error;
       
       // Redirect to login page
-      window.location.href = "http://localhost:5173/";
+      window.location.href = "https://medicheck-health-tracker.vercel.app/";
     } catch (err) {
       console.error("Logout Error:", err);
       alert("Error logging out. Try again!");
