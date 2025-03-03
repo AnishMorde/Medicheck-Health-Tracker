@@ -7,7 +7,7 @@ import TemperatureMonitor from './pages/TemperatureMonitor';
 import CircularCharts from './pages/CircularChart';
 import HomePage from './pages/HomePage';
 import Login from './components/Login';
-import AuthCallback from './components/AuthCallback';
+import AuthCallback from './pages/auth/AuthCallback';
 import { supabase } from './lib/supabase';
 import Logout from './components/Logout';
 
@@ -94,6 +94,7 @@ function App() {
           <Route path="/temperature" element={<TemperatureMonitor />} />
           <Route path="/charts" element={<CircularCharts />} />
           <Route path="/logout" element={<Logout />} />
+          <Route path="/auth/callback" element={<AuthCallback/>} />
         </Route>
         
         {/* Catch all redirect */}

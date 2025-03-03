@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 
 function AuthCallback() {
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const { error } = await supabase.auth.getSession();
-      
+      const url = window.location.href;
+
+      const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+
       if (error) {
         setError(error.message);
-        setTimeout(() => navigate('/', { replace: true }), 5000);
+        setTimeout(() => navigate("/", { replace: true }), 5000);
       } else {
-        navigate('/home', { replace: true });
+        console.log("Authentication Successful:", data);
+        navigate("/home", { replace: true });
       }
     };
 
