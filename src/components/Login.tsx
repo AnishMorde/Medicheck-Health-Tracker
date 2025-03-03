@@ -34,7 +34,7 @@ function Login() {
 
       if (error) throw error
     } catch (error) {
-      setError(error.message)
+      setError((error as any).message)
     } finally {
       setLoading(false)
     }
