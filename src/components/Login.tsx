@@ -28,7 +28,7 @@ function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://medicheck-health-tracker.vercel.app/auth/callback",
+          redirectTo: "https://medicheck-health-tracker.vercel.app/home",
         },
       })
 
