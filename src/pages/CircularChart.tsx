@@ -14,7 +14,6 @@ interface SensorData {
 const CircularCharts = () => {
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
 
-  // Memoized fetch function with proper error handling
   const fetchData = useCallback(async () => {
     console.log('Fetching latest sensor data...');
     try {
@@ -40,7 +39,6 @@ const CircularCharts = () => {
         let recommendation = '';
         let alert = '';
 
-        // ECG logic
         if (ecgValue < 60) {
           alert += 'ECG indicates bradycardia. ';
           recommendation += 'Consult a healthcare provider. ';
@@ -49,7 +47,6 @@ const CircularCharts = () => {
           recommendation += 'Monitor your heart rate. ';
         }
 
-        // SpO2 logic
         if (spo2Value < 90) {
           alert += 'Low SpO2 detected. ';
           recommendation += 'Seek urgent medical care. ';
@@ -57,7 +54,6 @@ const CircularCharts = () => {
           recommendation += 'Consider consulting a healthcare provider. ';
         }
 
-        // Temperature logic
         if (temperatureValue > 100.4) {
           alert += 'High fever detected. ';
           recommendation += 'Monitor temperature and consult a doctor. ';
@@ -81,59 +77,102 @@ const CircularCharts = () => {
     }
   }, []);
 
-  // Real-time updates setup
   useEffect(() => {
-    // Initial fetch
     fetchData();
 
-    // Setup real-time listeners
-    const tables = ['ecg_data', 'spo2_data', 'temperature_data'];
     const channel = supabase.channel('realtime-sensors')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public' }, (payload) => {
-        console.log('Realtime update:', payload.table);
-        fetchData(); // Refresh data on any insert
+      .on('postgres_changes', { event: 'INSERT', schema: 'public' }, () => {
+        console.log('Realtime update received');
+        fetchData();
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchData]); // Add fetchData to dependency array
+  }, [fetchData]);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">Real-time Sensor Data</h2>
+    <div className="p-4 md:p-6 max-w-full md:max-w-4xl mx-auto">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 text-center mb-4 md:mb-6">
+        Real-time Health Monitor
+      </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {sensorData &&
           [
-            { label: 'ECG', value: sensorData.ecg, max: 120, condition: sensorData.ecg < 60 || sensorData.ecg > 100 },
-            { label: 'SpO2', value: sensorData.spo2, max: 100, condition: sensorData.spo2 < 95 },
-            { label: 'Temperature', value: sensorData.temperature, max: 42, condition: sensorData.temperature < 36 || sensorData.temperature > 37.5 },
-          ].map(({ label, value, max, condition }) => (
-            <div key={label} className="flex flex-col items-center bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold mb-2">{label}</h3>
-              <div className="w-32 h-32">
+            { 
+              label: 'ECG', 
+              value: sensorData.ecg, 
+              max: 120, 
+              condition: sensorData.ecg < 60 || sensorData.ecg > 100,
+              unit: 'bpm'
+            },
+            { 
+              label: 'SpO2', 
+              value: sensorData.spo2, 
+              max: 100, 
+              condition: sensorData.spo2 < 95,
+              unit: '%'
+            },
+            { 
+              label: 'Temperature', 
+              value: sensorData.temperature, 
+              max: 42, 
+              condition: sensorData.temperature < 36 || sensorData.temperature > 37.5,
+              unit: '°C'
+            },
+          ].map(({ label, value, max, condition, unit }) => (
+            <div 
+              key={label}
+              className="flex flex-col items-center bg-white p-3 md:p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            >
+              <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-2 md:mb-3">
+                {label}
+              </h3>
+              <div className="w-20 h-20 md:w-32 md:h-32">
                 <CircularProgressbar
                   value={value}
                   maxValue={max}
-                  text={`${value}${label === 'SpO2' ? '%' : label === 'Temperature' ? '°C' : ''}`}
+                  text={`${value}${unit}`}
                   styles={{
-                    path: { stroke: condition ? '#f00' : '#0f0', strokeWidth: 8 },
-                    text: { fill: '#000', fontSize: '18px' },
+                    root: { maxWidth: '100%' },
+                    path: { 
+                      stroke: condition ? '#ef4444' : '#10b981',
+                      strokeLinecap: 'round',
+                      transition: 'stroke-dashoffset 0.5s ease 0s' 
+                    },
+                    trail: {
+                      stroke: '#e5e7eb',
+                      strokeLinecap: 'round',
+                    },
+                    text: { 
+                      fill: '#1f2937',
+                      fontSize: window.innerWidth < 768 ? '14px' : '16px',
+                      fontWeight: 600,
+                    }
                   }}
                 />
               </div>
+              <p className="mt-2 text-sm md:text-base text-gray-600">
+                {condition ? 'Abnormal' : 'Normal'}
+              </p>
             </div>
           ))}
       </div>
 
-      <div className="mt-6 p-4 bg-yellow-100 rounded-md text-center">
-        <strong>Recommendation:</strong> {sensorData?.recommendation}
-      </div>
-      
-      <div className="mt-4 p-4 bg-red-100 rounded-md text-center">
-        <strong>Alert:</strong> {sensorData?.alert}
+      <div className="mt-4 md:mt-6 space-y-3">
+        <div className="p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+          <p className="text-sm md:text-base text-yellow-800">
+            <span className="font-semibold">Recommendation:</span> {sensorData?.recommendation}
+          </p>
+        </div>
+        
+        <div className="p-3 md:p-4 bg-red-50 rounded-lg border border-red-200">
+          <p className="text-sm md:text-base text-red-800">
+            <span className="font-semibold">Alert:</span> {sensorData?.alert}
+          </p>
+        </div>
       </div>
     </div>
   );
