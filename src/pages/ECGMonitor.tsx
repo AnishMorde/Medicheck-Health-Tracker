@@ -460,8 +460,8 @@ export default function ECGMonitor() {
               : "bg-green-500"
           }`}
         >
-          <h3 className="text-lg font-semibold">Heart Rate</h3>
-          <p className="text-4xl font-bold">{latestValue} BPM</p>
+          <h3 className="text-lg font-semibold">ECG VALUE</h3>
+          <p className="text-4xl font-bold">{latestValue}</p>
           <p className="text-sm uppercase">{getStatus(latestValue)}</p>
           <p className="text-xs mt-1">Latest reading from real-time feed</p>
         </div>
