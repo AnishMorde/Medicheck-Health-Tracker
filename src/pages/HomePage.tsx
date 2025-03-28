@@ -132,7 +132,8 @@ const HomePage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
               <h3 className="text-xl font-semibold text-red-700 mb-3">What To Do</h3>
               <ul className="text-gray-600 space-y-2">
-                <li>• Call emergency services immediately (911)</li>
+                <li>• Call emergency services immediately (112)</li>
+                <li>• Call emergency Ambulance(102 , 108)</li>
                 <li>• Chew and swallow an aspirin (if not allergic)</li>
                 <li>• Sit or lie down and try to remain calm</li>
                 <li>• If trained, perform CPR if the person becomes unconscious</li>
