@@ -12,7 +12,7 @@ import { supabase } from "../lib/supabase";
 
 type TimeRange = "live" | "5min" | "day" | "week" | "month" | "year" | "all";
 
-export default function ECGMonitor() {
+export default function EcgWave() {
   const [data, setData] = useState<any[]>([]);
   const [liveData, setLiveData] = useState<any[]>([]);
   const [latestValue, setLatestValue] = useState(0);
@@ -23,7 +23,7 @@ export default function ECGMonitor() {
   // Function to fetch latest 100 readings for live feed
   const fetchLiveData = async () => {
     const { data: latestData, error } = await supabase
-      .from("bpm_value")
+      .from("ecg_data")
       .select("*")
       .order("timestamp", { ascending: false })
       .limit(100);
@@ -83,7 +83,7 @@ export default function ECGMonitor() {
 
     // Fetch data based on time range
     const { data: timeRangeData, error } = await supabase
-      .from("bpm_value")
+      .from("ecg_data")
       .select("*")
       .gte("timestamp", startTimeStr)
       .order("timestamp", { ascending: true })
@@ -121,10 +121,10 @@ export default function ECGMonitor() {
   // Real-time Subscription for live updates
   useEffect(() => {
     const channel = supabase
-      .channel("realtime:bpm_value")
+      .channel("realtime:ecg_data")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "bpm_value" },
+        { event: "INSERT", schema: "public", table: "ecg_data" },
         (payload) => {
           console.log("New ECG Data:", payload.new);
           
@@ -242,7 +242,7 @@ export default function ECGMonitor() {
         
         // Create and download the file
         downloadFile(
-          `bpm_value${getTimeRangeLabel()}_${new Date().toISOString().split('T')[0]}.csv`,
+          `ECG_Data_${getTimeRangeLabel()}_${new Date().toISOString().split('T')[0]}.csv`,
           headers + csvContent,
           'text/csv'
         );
@@ -277,7 +277,7 @@ export default function ECGMonitor() {
         
         // Create and download the file
         downloadFile(
-          `bpm_value_${getTimeRangeLabel()}_${new Date().toISOString().split('T')[0]}.json`,
+          `ECG_Data_${getTimeRangeLabel()}_${new Date().toISOString().split('T')[0]}.json`,
           JSON.stringify(exportData, null, 2),
           'application/json'
         );
@@ -327,9 +327,9 @@ export default function ECGMonitor() {
               <div class="summary">
                 <h2>Summary</h2>
                 <p><strong>Data Points:</strong> ${dataToDownload.length}</p>
-                <p><strong>Average Heart Rate:</strong> ${(dataToDownload.reduce((sum, item) => sum + item.value, 0) / dataToDownload.length).toFixed(1)} BPM</p>
-                <p><strong>Min Heart Rate:</strong> ${Math.min(...dataToDownload.map(item => item.value))} BPM</p>
-                <p><strong>Max Heart Rate:</strong> ${Math.max(...dataToDownload.map(item => item.value))} BPM</p>
+                <p><strong>Average ECG VALUE:</strong> ${(dataToDownload.reduce((sum, item) => sum + item.value, 0) / dataToDownload.length).toFixed(1)}ECG VALUE</p>
+                <p><strong>Min ECG VALUE:</strong> ${Math.min(...dataToDownload.map(item => item.value))} ECG VALUE</p>
+                <p><strong>Max ECG VALUE:</strong> ${Math.max(...dataToDownload.map(item => item.value))} ECG VALUE</p>
                 <p><strong>Start Time:</strong> ${new Date(dataToDownload[0]?.timestamp).toLocaleString()}</p>
                 <p><strong>End Time:</strong> ${new Date(dataToDownload[dataToDownload.length - 1]?.timestamp).toLocaleString()}</p>
                 <p><strong>Critical Readings:</strong> ${dataToDownload.filter(item => getStatus(item.value) === "critical").length}</p>
@@ -342,7 +342,7 @@ export default function ECGMonitor() {
                 <tr>
                   <th>#</th>
                   <th>Timestamp</th>
-                  <th>Heart Rate (BPM)</th>
+                  <th>ECG VALUE (mV) </th>
                   <th>Status</th>
                 </tr>
                 ${dataToDownload.slice(0, 100).map((row, index) => `
@@ -460,9 +460,9 @@ export default function ECGMonitor() {
               : "bg-green-500"
           }`}
         >
-          <h3 className="text-lg font-semibold">BPM VALUE</h3>
+          <h3 className="text-lg font-semibold">ECG VALUE</h3>
           <p className="text-4xl font-bold">{latestValue}</p>
-          <p className="text-sm uppercase">{getStatus(latestValue)}</p>
+          <p className="text-sm uppercase">{}</p>
           <p className="text-xs mt-1">Latest reading from real-time feed</p>
         </div>
       </div>
@@ -563,7 +563,7 @@ export default function ECGMonitor() {
                 />
                 <Tooltip
                   labelFormatter={(label) => new Date(label).toLocaleString()}
-                  formatter={(value: number) => [`${value.toFixed(1)} BPM`, "Heart Rate"]}
+                  formatter={(value: number) => [`${value.toFixed(1)} mv`, "ECG VALUE"]}
                 />
                 <Line
                   type="monotone"

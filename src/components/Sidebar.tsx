@@ -97,7 +97,7 @@ export default function Sidebar({ darkMode, toggleDarkMode }: SidebarProps) {
             </NavLink>
 
             <NavLink
-              to="/ecg"
+              to="/bpm"
               onClick={closeSidebar}
               className={({ isActive }) =>
                 `flex items-center p-3 rounded-lg mb-2 ${
@@ -108,7 +108,7 @@ export default function Sidebar({ darkMode, toggleDarkMode }: SidebarProps) {
               }
             >
               <Heart className="mr-3" />
-              ECG Monitor
+              BPM Monitor
             </NavLink>
 
             <NavLink
@@ -124,6 +124,23 @@ export default function Sidebar({ darkMode, toggleDarkMode }: SidebarProps) {
             >
               <Activity className="mr-3" />
               SpO2 Monitor
+            </NavLink>
+
+
+
+            <NavLink
+              to="/ecg"
+              onClick={closeSidebar}
+              className={({ isActive }) =>
+                `flex items-center p-3 rounded-lg mb-2 ${
+                  isActive
+                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`
+              }
+            >
+              <Thermometer className="mr-3" />
+              ECG Monitor
             </NavLink>
 
             <NavLink

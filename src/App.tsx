@@ -10,6 +10,7 @@ import Login from './components/Login';
 import AuthCallback from './pages/auth/AuthCallback';
 import { supabase } from './lib/supabase';
 import Logout from './components/Logout';
+import EcgWave from './pages/EcgWave';
 
 // Protected Route component (same as before)
 const ProtectedRoute = () => {
@@ -89,8 +90,9 @@ function App() {
         {/* Protected routes inside AppLayout */}
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<HomePage />} />
-          <Route path="/ecg" element={<ECGMonitor />} />
+          <Route path="/bpm" element={<ECGMonitor />} />
           <Route path="/spo2" element={<SpO2Monitor />} />
+          <Route path="/ecg" element={ <EcgWave/>} />
           <Route path="/temperature" element={<TemperatureMonitor />} />
           <Route path="/charts" element={<CircularCharts />} />
           <Route path="/logout" element={<Logout />} />

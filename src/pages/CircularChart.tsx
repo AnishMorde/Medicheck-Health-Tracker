@@ -22,7 +22,7 @@ const CircularCharts = () => {
         { data: spo2Data, error: spo2Error },
         { data: tempData, error: tempError }
       ] = await Promise.all([
-        supabase.from('ecg_data').select('value').order('timestamp', { ascending: false }).limit(1),
+        supabase.from('bpm_value').select('value').order('timestamp', { ascending: false }).limit(1),
         supabase.from('spo2_data').select('value').order('timestamp', { ascending: false }).limit(1),
         supabase.from('temperature_data').select('value').order('timestamp', { ascending: false }).limit(1)
       ]);
@@ -102,7 +102,7 @@ const CircularCharts = () => {
         {sensorData &&
           [
             { 
-              label: 'ECG', 
+              label: 'BPM', 
               value: sensorData.ecg, 
               max: 120, 
               condition: sensorData.ecg < 60 || sensorData.ecg > 100,

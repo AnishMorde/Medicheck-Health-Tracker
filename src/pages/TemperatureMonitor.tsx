@@ -20,7 +20,7 @@ export default function TemperatureMonitor() {
       .from("temperature_data")
       .select("*")
       .order("timestamp", { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (error) {
       console.error("Error fetching temperature data:", error);
@@ -50,7 +50,7 @@ export default function TemperatureMonitor() {
         (payload) => {
           console.log("New Temperature Data:", payload.new);
           setData((currentData) => {
-            const newData = [...currentData.slice(-49), payload.new];
+            const newData = [...currentData.slice(-99), payload.new];
             setLatestValue(payload.new.value);
             return newData;
           });
